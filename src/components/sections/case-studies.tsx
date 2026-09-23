@@ -1,24 +1,29 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Quote, SearchCheck, Wrench } from "lucide-react";
+import { Quote, SearchCheck, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SectionHeading } from "@/components/shared";
-import { caseStudies } from "@/lib/site-content";
+import { SectionHeading, ArrowDir } from "@/components/shared";
+import { siteContent } from "@/lib/content";
 import { cn } from "@/lib/utils";
+import { useLang } from "@/lib/i18n";
+import { ui } from "@/lib/ui-strings";
 
 export function CaseStudies() {
+  const { lang, isAr, t } = useLang();
+  const S = siteContent(lang);
+
   return (
     <section id="cases" className="relative bg-white">
       <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
         <SectionHeading
-          eyebrow="Case studies"
-          title="Real problems. Careful diagnoses. Honest results."
-          description="No overnight successes — these are businesses that fixed systems over months, with numbers before and after. Each case follows the same arc: problem, diagnosis, intervention, result, lessons."
+          eyebrow={t(ui.cases.eyebrow)}
+          title={t(ui.cases.title)}
+          description={t(ui.cases.desc)}
         />
 
         <div className="mt-14 space-y-10">
-          {caseStudies.map((cs, idx) => (
+          {S.caseStudies.map((cs, idx) => (
             <motion.article
               key={cs.id}
               initial={{ opacity: 0, y: 28 }}
@@ -27,12 +32,14 @@ export function CaseStudies() {
               transition={{ duration: 0.55 }}
               className={cn(
                 "overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card-lift-lg",
-                idx % 2 === 1 && "lg:[direction:rtl]"
+                // Alternate the photo side. In RTL the base direction already
+                // flips, so the override direction swaps to keep alternating.
+                idx % 2 === 1 && (isAr ? "lg:[direction:ltr]" : "lg:[direction:rtl]")
               )}
             >
               <div className="grid lg:grid-cols-[0.9fr_1.1fr]">
                 {/* Image side */}
-                <div className="relative min-h-[280px] lg:min-h-full lg:[direction:ltr]">
+                <div className={cn("relative min-h-[280px] lg:min-h-full", isAr ? "lg:[direction:rtl]" : "lg:[direction:ltr]")}>
                   <img
                     src={cs.image}
                     alt={cs.imageAlt}
@@ -47,17 +54,17 @@ export function CaseStudies() {
                       <span className="h-1 w-1 rounded-full bg-slate-500" />
                       <span>{cs.size}</span>
                       <span className="h-1 w-1 rounded-full bg-slate-500" />
-                      <span>{cs.duration} engagement</span>
+                      <span>{cs.duration} · {t(ui.cases.engagement)}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Content side */}
-                <div className="p-6 sm:p-8 lg:[direction:ltr]">
+                <div className={cn("p-6 sm:p-8", isAr ? "lg:[direction:rtl]" : "lg:[direction:ltr]")}>
                   {/* Problem */}
                   <div>
                     <div className="flex items-center gap-2 font-display text-[11px] font-bold uppercase tracking-[0.16em] text-signal-amber-deep">
-                      <SearchCheck className="h-3.5 w-3.5" /> The problem
+                      <SearchCheck className="h-3.5 w-3.5" /> {t(ui.cases.problem)}
                     </div>
                     <p className="mt-2 leading-relaxed text-slate-700">{cs.problem}</p>
                   </div>
@@ -65,7 +72,7 @@ export function CaseStudies() {
                   {/* Diagnosis */}
                   <div className="mt-5">
                     <div className="flex items-center gap-2 font-display text-[11px] font-bold uppercase tracking-[0.16em] text-electric-700">
-                      <SearchCheck className="h-3.5 w-3.5" /> The diagnosis
+                      <SearchCheck className="h-3.5 w-3.5" /> {t(ui.cases.diagnosis)}
                     </div>
                     <p className="mt-2 leading-relaxed text-slate-700">{cs.diagnosis}</p>
                   </div>
@@ -73,7 +80,7 @@ export function CaseStudies() {
                   {/* Intervention */}
                   <div className="mt-5">
                     <div className="flex items-center gap-2 font-display text-[11px] font-bold uppercase tracking-[0.16em] text-signal-green-deep">
-                      <Wrench className="h-3.5 w-3.5" /> The intervention
+                      <Wrench className="h-3.5 w-3.5" /> {t(ui.cases.intervention)}
                     </div>
                     <ul className="mt-2.5 space-y-1.5">
                       {cs.intervention.map((item, i) => (
@@ -100,7 +107,7 @@ export function CaseStudies() {
                   {/* Lessons + quote */}
                   <div className="mt-6 rounded-xl bg-navy-950 p-5">
                     <div className="font-display text-[11px] font-bold uppercase tracking-[0.16em] text-electric-400">
-                      Lessons that transfer
+                      {t(ui.cases.lessons)}
                     </div>
                     <ul className="mt-2.5 space-y-1.5">
                       {cs.lessons.map((l, i) => (
@@ -127,8 +134,8 @@ export function CaseStudies() {
         <div className="mt-12 flex justify-center">
           <Button asChild size="lg" className="bg-electric-600 px-7 font-semibold text-white hover:bg-electric-500">
             <a href="#diagnosis">
-              Diagnose my business
-              <ArrowRight className="ml-1.5 h-4 w-4" />
+              {t(ui.cases.cta)}
+              <ArrowDir className="ms-1.5 h-4 w-4" />
             </a>
           </Button>
         </div>

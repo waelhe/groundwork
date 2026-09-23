@@ -3,21 +3,26 @@
 import { motion } from "framer-motion";
 import { BadgeCheck, Briefcase } from "lucide-react";
 import { SectionHeading } from "@/components/shared";
-import { experts } from "@/lib/site-content";
+import { siteContent } from "@/lib/content";
+import { useLang } from "@/lib/i18n";
+import { ui } from "@/lib/ui-strings";
 
 export function Experts() {
+  const { lang, t } = useLang();
+  const S = siteContent(lang);
+
   return (
     <section id="experts" className="relative border-t border-slate-200 bg-paper">
       <div className="bg-grid-faint pointer-events-none absolute inset-0" aria-hidden="true" />
       <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
         <SectionHeading
-          eyebrow="The analysts"
-          title="Expertise you can inspect, not just credentials."
-          description="Every diagnosis and recommendation on this platform is grounded in the methods of practitioners who have spent years inside small businesses — food production floors, machine shops, retail counters, and back offices. Capability first; certificates second."
+          eyebrow={t(ui.experts.eyebrow)}
+          title={t(ui.experts.title)}
+          description={t(ui.experts.desc)}
         />
 
         <div className="mt-14 grid gap-5 md:grid-cols-2">
-          {experts.map((ex, i) => (
+          {S.experts.map((ex, i) => (
             <motion.div
               key={ex.name}
               initial={{ opacity: 0, y: 24 }}
@@ -37,7 +42,7 @@ export function Experts() {
                     <h3 className="font-display text-lg font-bold text-navy-950">{ex.name}</h3>
                     <span className="inline-flex items-center gap-1 rounded-full border border-signal-green-deep/30 bg-signal-green-deep/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-signal-green-deep">
                       <BadgeCheck className="h-3 w-3" />
-                      Verified practitioner
+                      {t(ui.experts.verified)}
                     </span>
                   </div>
                   <p className="text-sm font-semibold text-electric-700">{ex.role}</p>
@@ -77,7 +82,7 @@ export function Experts() {
 
               <div className="mt-4 border-t border-slate-100 pt-4">
                 <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                  Working method
+                  {t(ui.experts.method)}
                 </div>
                 <p className="mt-1 text-[13px] leading-relaxed text-slate-600">{ex.method}</p>
               </div>
@@ -86,8 +91,7 @@ export function Experts() {
         </div>
 
         <p className="mt-10 text-center text-xs text-slate-500">
-          Profiles represent the diagnostic disciplines behind the platform&rsquo;s method —
-          systems thinking, unit economics, cash-flow realism, and technology restraint.
+          {t(ui.experts.footnote)}
         </p>
       </div>
     </section>

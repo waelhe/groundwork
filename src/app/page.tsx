@@ -1,3 +1,4 @@
+import { LangProvider } from "@/lib/i18n";
 import { Navbar } from "@/components/sections/navbar";
 import { Hero } from "@/components/sections/hero";
 import { Method } from "@/components/sections/method";
@@ -12,20 +13,22 @@ import { Footer } from "@/components/sections/footer";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col bg-white">
-      <Navbar />
-      <main className="flex-1">
-        <Hero />
-        <Method />
-        <Diagnosis />
-        <ProblemLibrary />
-        <Tools />
-        <ActionPlan />
-        <CaseStudies />
-        <Experts />
-        <FinalCta />
-      </main>
-      <Footer />
-    </div>
+    <LangProvider>
+      <div className="flex min-h-screen flex-col bg-white">
+        <Navbar />
+        <main className="flex-1">
+          <Hero />
+          <Method />
+          <Diagnosis />
+          <ProblemLibrary />
+          <Tools />
+          <ActionPlan />
+          <CaseStudies />
+          <Experts />
+          <FinalCta />
+        </main>
+        <Footer />
+      </div>
+    </LangProvider>
   );
 }

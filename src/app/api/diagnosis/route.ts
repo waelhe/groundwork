@@ -49,11 +49,21 @@ OUTPUT FORMAT — respond with ONLY a valid JSON object, no markdown fences, no 
 
 Rules for the JSON: solutions must include 2-4 entries INCLUDING at least one lower-cost/simpler alternative, and if the obvious reflex answer (e.g. "run ads") is wrong, include it as an option with an honest low rating. implementation must have at least 2 NOW items, 2 NEXT items, and 1-2 LATER items. kpis: 3-4 entries. rootCauses: 2-4 entries. Keep every string tight and information-dense.`;
 
+const ARABIC_INSTRUCTIONS = `
+
+LANGUAGE (IMPORTANT): The owner's input may be written in Arabic. ALL free-text string values in your JSON (problemStatement, surfaceSymptoms, cause, explanation, effect, area, question, why, name, approach, resources, time, recommended values, implementation action/detail/owner/effort, kpi name/baseline/target/cadence, risk, mitigation, firstMove) MUST be written in clear, professional Modern Standard Arabic (فصحى حديثة واضحة) — direct, concrete, respectful, no literary flourishes, no emojis, Western digits (0-9) inside numbers.
+EXCEPTION — keep these enum values EXACTLY in English (the UI translates them):
+- solutions impact/cost/complexity/risk: "High" | "Medium" | "Low"
+- rootCauses confidence: "Likely" | "Possible" | "Needs verification"
+- implementation phase: "NOW" | "NEXT" | "LATER"
+Do NOT translate, transliterate, or alter the JSON keys. Respond with the JSON object only.`;
+
 interface DiagnosisPayload {
   description: string;
   category: string;
   industry?: string;
   size?: string;
+  lang?: "en" | "ar";
   answers?: Record<string, string>;
 }
 
@@ -77,11 +87,23 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as DiagnosisPayload;
 
     const description = (body.description || "").trim();
+    const lang: "en" | "ar" = body.lang === "ar" ? "ar" : "en";
+    const T = {
+      minLen: {
+        en: "Please describe what is happening in your business (at least a sentence).",
+        ar: "يرجى وصف ما يحدث في عملك (جملة واحدة على الأقل).",
+      },
+      engine: {
+        en: "The diagnostic engine could not complete the analysis. Please try again in a moment.",
+        ar: "لم يتمكن محرك التشخيص من إكمال التحليل. يرجى المحاولة بعد قليل.",
+      },
+      server: {
+        en: "Something went wrong while running the diagnosis. Please try again.",
+        ar: "حدث خطأ أثناء تشغيل التشخيص. يرجى المحاولة مرة أخرى.",
+      },
+    };
     if (!description || description.length < 10) {
-      return NextResponse.json(
-        { error: "Please describe what is happening in your business (at least a sentence)." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: T.minLen[lang] }, { status: 400 });
     }
 
     const answersText = Object.entries(body.answers || {})
@@ -111,7 +133,7 @@ Diagnose this business using the method. Respond with the JSON object only.`;
       try {
         const completion = await zai.chat.completions.create({
           messages: [
-            { role: "assistant", content: SYSTEM_PROMPT },
+            { role: "assistant", content: SYSTEM_PROMPT + (lang === "ar" ? ARABIC_INSTRUCTIONS : "") },
             { role: "user", content: userPrompt },
           ],
           thinking: { type: "disabled" },
@@ -133,10 +155,7 @@ Diagnose this business using the method. Respond with the JSON object only.`;
 
     if (!report) {
       console.error("Diagnosis generation failed:", lastError);
-      return NextResponse.json(
-        { error: "The diagnostic engine could not complete the analysis. Please try again in a moment." },
-        { status: 502 }
-      );
+      return NextResponse.json({ error: T.engine[lang] }, { status: 502 });
     }
 
     return NextResponse.json({ report });

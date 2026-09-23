@@ -2,6 +2,8 @@
 
 A high-end business solutions platform for small business owners and entrepreneurs. Groundwork works as a **professional business problem-solving consultant**: it diagnoses what is actually holding a business back, separates symptoms from root causes, and builds an actionable, constraint-aware plan to improve it.
 
+**بilingual / ثنائي اللغة (EN / AR):** The platform runs fully in English and Arabic — one-click language toggle, complete RTL layout, Arabic typography (Tajawal + IBM Plex Sans Arabic), and an Arabic-aware AI diagnosis engine that returns its full report in professional Modern Standard Arabic.
+
 ## What It Does
 
 - **Business Diagnosis** — A 2-step guided wizard (category → targeted follow-up questions) powered by an AI engine that returns a structured diagnosis report: known facts vs. assumptions vs. things to verify, root-cause analysis, compared solutions, and a NOW → NEXT → LATER action plan with KPIs.

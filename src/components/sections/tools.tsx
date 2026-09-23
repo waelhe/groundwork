@@ -23,6 +23,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SectionHeading } from "@/components/shared";
 import { cn } from "@/lib/utils";
+import { useLang } from "@/lib/i18n";
+import { ui } from "@/lib/ui-strings";
 
 const money = (v: number, decimals = 0) =>
   new Intl.NumberFormat("en-US", {
@@ -64,7 +66,7 @@ function NumberField({
       </Label>
       <div className="relative mt-1.5">
         {prefix && (
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-400">
+          <span className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-400">
             {prefix}
           </span>
         )}
@@ -78,12 +80,12 @@ function NumberField({
           onChange={(e) => onChange(e.target.value === "" ? 0 : parseFloat(e.target.value))}
           className={cn(
             "border-slate-300 text-[15px] font-semibold text-navy-950 focus-visible:ring-electric-500",
-            prefix && "pl-7",
-            suffix && "pr-12"
+            prefix && "ps-7",
+            suffix && "pe-14"
           )}
         />
         {suffix && (
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-400">
+          <span className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-400">
             {suffix}
           </span>
         )}
@@ -130,6 +132,7 @@ function MetricCard({
 /* ---------------- Break-even analyzer ---------------- */
 
 function BreakEvenTool() {
+  const { t } = useLang();
   const [price, setPrice] = useState(38);
   const [unitCost, setUnitCost] = useState(21);
   const [fixed, setFixed] = useState(9500);
@@ -161,26 +164,30 @@ function BreakEvenTool() {
   return (
     <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
       <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
-        <NumberField id="be-price" label="Average price per sale" value={price} onChange={setPrice} prefix="$" step={0.5} />
-        <NumberField id="be-vcost" label="Variable cost per sale" value={unitCost} onChange={setUnitCost} prefix="$" step={0.5} />
-        <NumberField id="be-fixed" label="Monthly fixed costs" value={fixed} onChange={setFixed} prefix="$" step={100} />
-        <NumberField id="be-vol" label="Current monthly volume" value={volume} onChange={setVolume} suffix="units" step={10} />
+        <NumberField id="be-price" label={t(ui.tools.be.price)} value={price} onChange={setPrice} prefix="$" step={0.5} />
+        <NumberField id="be-vcost" label={t(ui.tools.be.vcost)} value={unitCost} onChange={setUnitCost} prefix="$" step={0.5} />
+        <NumberField id="be-fixed" label={t(ui.tools.be.fixed)} value={fixed} onChange={setFixed} prefix="$" step={100} />
+        <NumberField id="be-vol" label={t(ui.tools.be.vol)} value={volume} onChange={setVolume} suffix={t(ui.tools.be.units)} step={10} />
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 text-xs leading-relaxed text-slate-600">
-          <span className="font-semibold text-navy-950">Variable cost</span> = anything that changes per sale:
-          materials, delivery fees, payment processing, commissions.
+          <span className="font-semibold text-navy-950">{t(ui.tools.be.vcNote)}</span>
         </div>
       </div>
 
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <MetricCard label="Contribution / sale" value={money(cm, 2)} tone={cm > 0 ? "navy" : "red"} />
-          <MetricCard label="Margin ratio" value={`${num(cmRatio * 100, 1)}%`} tone={cmRatio >= 0.3 ? "green" : cmRatio > 0.15 ? "amber" : "red"} />
-          <MetricCard label="Break-even" value={beUnits === Infinity ? "—" : `${num(Math.ceil(beUnits))} sales`} tone="navy" sub={beUnits === Infinity ? "price below cost" : money(beRevenue) + " / month"} />
+          <MetricCard label={t(ui.tools.be.cm)} value={money(cm, 2)} tone={cm > 0 ? "navy" : "red"} />
+          <MetricCard label={t(ui.tools.be.marginRatio)} value={`${num(cmRatio * 100, 1)}%`} tone={cmRatio >= 0.3 ? "green" : cmRatio > 0.15 ? "amber" : "red"} />
           <MetricCard
-            label="Monthly profit"
+            label={t(ui.tools.be.breakEven)}
+            value={beUnits === Infinity ? "—" : `${num(Math.ceil(beUnits))} ${t(ui.tools.be.sales)}`}
+            tone="navy"
+            sub={beUnits === Infinity ? t(ui.tools.be.belowCost) : `${money(beRevenue)} ${t(ui.tools.be.perMonth)}`}
+          />
+          <MetricCard
+            label={t(ui.tools.be.profit)}
             value={money(monthlyProfit)}
             tone={monthlyProfit >= 0 ? "green" : "red"}
-            sub={`safety margin ${num(marginOfSafety * 100, 0)}%`}
+            sub={`${t(ui.tools.be.safety)} ${num(marginOfSafety * 100, 0)}%`}
           />
         </div>
 
@@ -202,11 +209,14 @@ function BreakEvenTool() {
                   width={44}
                 />
                 <Tooltip
-                  formatter={(value: number | string, name: string) => [money(Number(value)), name === "revenue" ? "Revenue" : name === "cost" ? "Total cost" : "Fixed costs"]}
-                  labelFormatter={(l) => `${num(Number(l))} units sold`}
+                  formatter={(value: number | string, name: string) => [
+                    money(Number(value)),
+                    name === "revenue" ? t(ui.tools.be.revenue) : name === "cost" ? t(ui.tools.be.totalCost) : t(ui.tools.be.fixedCosts),
+                  ]}
+                  labelFormatter={(l) => `${num(Number(l))} ${t(ui.tools.be.unitsSold)}`}
                   contentStyle={{ borderRadius: 10, border: "1px solid #e2e8f0", fontSize: 12 }}
                 />
-                <ReferenceLine x={Math.ceil(beUnits)} stroke="#2e7cff" strokeDasharray="5 4" label={{ value: "Break-even", fontSize: 11, fill: "#1b66e0", position: "insideTopRight" }} />
+                <ReferenceLine x={Math.ceil(beUnits)} stroke="#2e7cff" strokeDasharray="5 4" label={{ value: t(ui.tools.be.breakEven), fontSize: 11, fill: "#1b66e0", position: "insideTopRight" }} />
                 <Area type="monotone" dataKey="revenue" stroke="none" fill="url(#profitZone)" />
                 <Line type="monotone" dataKey="revenue" stroke="#2e7cff" strokeWidth={2.5} dot={false} />
                 <Line type="monotone" dataKey="cost" stroke="#b97a10" strokeWidth={2} dot={false} />
@@ -215,19 +225,19 @@ function BreakEvenTool() {
             </ResponsiveContainer>
           ) : (
             <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-              <span className="font-display text-lg font-bold text-red-600">Price is below variable cost</span>
+              <span className="font-display text-lg font-bold text-red-600">{t(ui.tools.be.emergency)}</span>
               <p className="max-w-sm text-sm text-slate-500">
-                Every sale loses {money(Math.abs(cm), 2)} before fixed costs. This is a pricing emergency — selling
-                more makes it worse.
+                {t(ui.tools.be.emergencyA)}{" "}
+                <span className="font-semibold text-red-600">{money(Math.abs(cm), 2)}</span>{" "}
+                {t(ui.tools.be.emergencyB)}
               </p>
             </div>
           )}
         </div>
 
         <Insight>
-          <span className="font-semibold text-navy-950">How to read this:</span> the blue line is revenue, the amber
-          line is total cost. Where they cross is break-even. A margin ratio under 25% means pricing or variable
-          costs deserve attention <em>before</em> anything else — including marketing.
+          <span className="font-semibold text-navy-950">{t(ui.tools.be.howTo)}</span>{" "}
+          {t(ui.tools.be.howToBody)}
         </Insight>
       </div>
     </div>
@@ -237,6 +247,7 @@ function BreakEvenTool() {
 /* ---------------- Pricing & margin tool ---------------- */
 
 function PricingTool() {
+  const { t } = useLang();
   const [price, setPrice] = useState(45);
   const [unitCost, setUnitCost] = useState(24);
   const [volume, setVolume] = useState(400);
@@ -249,7 +260,6 @@ function PricingTool() {
   // Note: linear model — assumes volume unchanged (see caveat)
   const profitNew = marginNew * volume;
   const delta = profitNew - profitNow;
-  const beNow = marginNow > 0 ? profitNow / marginNow : 0;
 
   const chartData = useMemo(() => {
     const points = Array.from({ length: 25 }, (_, i) => {
@@ -267,13 +277,13 @@ function PricingTool() {
   return (
     <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
       <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
-        <NumberField id="pr-price" label="Current price" value={price} onChange={setPrice} prefix="$" step={0.5} />
-        <NumberField id="pr-cost" label="Cost per sale (materials + labor)" value={unitCost} onChange={setUnitCost} prefix="$" step={0.5} />
-        <NumberField id="pr-vol" label="Monthly volume" value={volume} onChange={setVolume} suffix="units" step={10} />
+        <NumberField id="pr-price" label={t(ui.tools.pr.price)} value={price} onChange={setPrice} prefix="$" step={0.5} />
+        <NumberField id="pr-cost" label={t(ui.tools.pr.cost)} value={unitCost} onChange={setUnitCost} prefix="$" step={0.5} />
+        <NumberField id="pr-vol" label={t(ui.tools.pr.vol)} value={volume} onChange={setVolume} suffix={t(ui.tools.pr.units)} step={10} />
         <div className="rounded-xl border border-slate-200 bg-white p-4">
           <div className="flex items-baseline justify-between">
             <Label className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">
-              Price change
+              {t(ui.tools.pr.change)}
             </Label>
             <span
               className={cn(
@@ -293,7 +303,7 @@ function PricingTool() {
             value={change}
             onChange={(e) => setChange(parseInt(e.target.value))}
             className="mt-3 w-full accent-electric-600"
-            aria-label="Price change percentage"
+            aria-label={t(ui.tools.pr.change)}
           />
           <div className="mt-1 flex justify-between text-[11px] text-slate-400">
             <span>−30%</span>
@@ -305,23 +315,23 @@ function PricingTool() {
 
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <MetricCard label="New price" value={money(newPrice, 2)} />
+          <MetricCard label={t(ui.tools.pr.newPrice)} value={money(newPrice, 2)} />
           <MetricCard
-            label="Margin per sale"
+            label={t(ui.tools.pr.marginSale)}
             value={money(marginNew, 2)}
-            sub={`was ${money(marginNow, 2)}`}
+            sub={`${t(ui.tools.pr.was)} ${money(marginNow, 2)}`}
             tone={marginNew > marginNow ? "green" : marginNew < marginNow ? "red" : "navy"}
           />
           <MetricCard
-            label="Margin %"
+            label={t(ui.tools.pr.marginPct)}
             value={newPrice > 0 ? `${num((marginNew / newPrice) * 100, 1)}%` : "—"}
-            sub={`was ${price > 0 ? num((marginNow / price) * 100, 1) + "%" : "—"}`}
+            sub={`${t(ui.tools.pr.was)} ${price > 0 ? num((marginNow / price) * 100, 1) + "%" : "—"}`}
             tone={marginNew / newPrice >= 0.35 ? "green" : marginNew / newPrice >= 0.2 ? "amber" : "red"}
           />
           <MetricCard
-            label="Monthly gross profit"
+            label={t(ui.tools.pr.gross)}
             value={money(profitNew)}
-            sub={`${delta >= 0 ? "+" : ""}${money(delta)} vs today`}
+            sub={`${delta >= 0 ? "+" : ""}${money(delta)} ${t(ui.tools.pr.vsToday)}`}
             tone={delta >= 0 ? "green" : "red"}
           />
         </div>
@@ -347,13 +357,13 @@ function PricingTool() {
                 width={48}
               />
               <Tooltip
-                formatter={(value: number | string) => [money(Number(value)), "Monthly gross profit"]}
-                labelFormatter={(l) => `Price ${Number(l) > 0 ? "+" : ""}${l}% (${money(price * (1 + Number(l) / 100), 2)})`}
+                formatter={(value: number | string) => [money(Number(value)), t(ui.tools.pr.profitLabel)]}
+                labelFormatter={(l) => `${t(ui.tools.pr.priceAt)} ${Number(l) > 0 ? "+" : ""}${l}% (${money(price * (1 + Number(l) / 100), 2)})`}
                 contentStyle={{ borderRadius: 10, border: "1px solid #e2e8f0", fontSize: 12 }}
               />
               <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="4 4" />
               <ReferenceLine x={0} stroke="#94a3b8" strokeDasharray="4 4" />
-              <ReferenceLine x={change} stroke="#1b66e0" strokeWidth={1.5} label={{ value: "You", fontSize: 11, fill: "#1b66e0", position: "insideTopLeft" }} />
+              <ReferenceLine x={change} stroke="#1b66e0" strokeWidth={1.5} label={{ value: t(ui.tools.pr.you), fontSize: 11, fill: "#1b66e0", position: "insideTopLeft" }} />
               <Area type="monotone" dataKey="profit" stroke="none" fill="url(#priceZone)" />
               <Line type="monotone" dataKey="profit" stroke="#2e7cff" strokeWidth={2.5} dot={false} />
             </AreaChart>
@@ -361,10 +371,8 @@ function PricingTool() {
         </div>
 
         <Insight>
-          <span className="font-semibold text-navy-950">Honest caveat:</span> this model holds volume constant — real
-          customers may buy less as prices rise. Use it to find your floor (the price where margin dies), then test a
-          small rise (5-10%) on a few items first. The margin math tells you what a price change <em>could</em> win;
-          only a real test tells you what it <em>will</em> win.
+          <span className="font-semibold text-navy-950">{t(ui.tools.pr.caveat)}</span>{" "}
+          {t(ui.tools.pr.caveatBody)}
         </Insight>
       </div>
     </div>
@@ -380,20 +388,21 @@ interface CostLine {
   type: "fixed" | "variable";
 }
 
-const defaultCosts: CostLine[] = [
-  { id: 1, name: "Rent & utilities", amount: 3200, type: "fixed" },
-  { id: 2, name: "Wages (base)", amount: 8500, type: "fixed" },
-  { id: 3, name: "Materials / stock", amount: 6400, type: "variable" },
-  { id: 4, name: "Software & subscriptions", amount: 380, type: "fixed" },
-  { id: 5, name: "Delivery & fuel", amount: 900, type: "variable" },
-  { id: 6, name: "Marketing", amount: 600, type: "fixed" },
-];
-
 const PIE_COLORS = ["#2e7cff", "#5c9dff", "#2dd4bf", "#0e9f6e", "#f6a723", "#b97a10", "#94a3b8", "#475569"];
 
 function CostStructureTool() {
+  const { t } = useLang();
   const [revenue, setRevenue] = useState(26000);
-  const [costs, setCosts] = useState<CostLine[]>(defaultCosts);
+  // Defaults are localized at mount; the tool is keyed by language in the
+  // section shell so toggling the language remounts it with fresh defaults.
+  const [costs, setCosts] = useState<CostLine[]>(() => [
+    { id: 1, name: t(ui.tools.cs.defaults.rent), amount: 3200, type: "fixed" },
+    { id: 2, name: t(ui.tools.cs.defaults.wages), amount: 8500, type: "fixed" },
+    { id: 3, name: t(ui.tools.cs.defaults.materials), amount: 6400, type: "variable" },
+    { id: 4, name: t(ui.tools.cs.defaults.software), amount: 380, type: "fixed" },
+    { id: 5, name: t(ui.tools.cs.defaults.delivery), amount: 900, type: "variable" },
+    { id: 6, name: t(ui.tools.cs.defaults.marketing), amount: 600, type: "fixed" },
+  ]);
 
   const totals = useMemo(() => {
     const fixed = costs.filter((c) => c.type === "fixed").reduce((s, c) => s + c.amount, 0);
@@ -415,20 +424,20 @@ function CostStructureTool() {
     <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
       <div className="space-y-4">
         <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
-          <NumberField id="cs-rev" label="Monthly revenue" value={revenue} onChange={setRevenue} prefix="$" step={500} />
+          <NumberField id="cs-rev" label={t(ui.tools.cs.revenue)} value={revenue} onChange={setRevenue} prefix="$" step={500} />
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
           <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
-            <span className="font-display text-sm font-bold text-navy-950">Cost lines</span>
+            <span className="font-display text-sm font-bold text-navy-950">{t(ui.tools.cs.lines)}</span>
             <Button
               size="sm"
               variant="outline"
               onClick={add}
               className="h-8 border-electric-600/40 text-electric-700 hover:bg-electric-50"
             >
-              <Plus className="mr-1 h-3.5 w-3.5" />
-              Add line
+              <Plus className="me-1 h-3.5 w-3.5" />
+              {t(ui.tools.cs.add)}
             </Button>
           </div>
           <div className="max-h-[360px] overflow-y-auto scrollbar-thin">
@@ -437,32 +446,32 @@ function CostStructureTool() {
                 <Input
                   value={c.name}
                   onChange={(e) => update(c.id, { name: e.target.value })}
-                  placeholder="Cost name"
+                  placeholder={t(ui.tools.cs.namePh)}
                   className="h-9 flex-1 border-transparent bg-transparent px-2 text-sm font-medium shadow-none hover:border-slate-200 focus-visible:border-electric-500"
                 />
                 <Input
                   type="number"
                   value={c.amount || ""}
                   onChange={(e) => update(c.id, { amount: parseFloat(e.target.value) || 0 })}
-                  className="h-9 w-28 border-transparent bg-slate-50 px-2 text-right text-sm font-semibold text-navy-950 shadow-none hover:border-slate-200 focus-visible:border-electric-500"
-                  aria-label={`${c.name || "cost"} amount`}
+                  className="h-9 w-28 border-transparent bg-slate-50 px-2 text-end text-sm font-semibold text-navy-950 shadow-none hover:border-slate-200 focus-visible:border-electric-500"
+                  aria-label={`${c.name || t(ui.tools.cs.namePh)} ${t(ui.tools.cs.amountAria)}`}
                 />
                 <div className="flex overflow-hidden rounded-md border border-slate-200">
-                  {(["fixed", "variable"] as const).map((t) => (
+                  {(["fixed", "variable"] as const).map((ty) => (
                     <button
-                      key={t}
+                      key={ty}
                       type="button"
-                      onClick={() => update(c.id, { type: t })}
+                      onClick={() => update(c.id, { type: ty })}
                       className={cn(
                         "px-2 py-1 text-[10px] font-bold uppercase tracking-wide transition-colors",
-                        c.type === t
-                          ? t === "fixed"
+                        c.type === ty
+                          ? ty === "fixed"
                             ? "bg-navy-950 text-white"
                             : "bg-electric-600 text-white"
                           : "bg-white text-slate-400 hover:text-slate-600"
                       )}
                     >
-                      {t === "fixed" ? "Fix" : "Var"}
+                      {ty === "fixed" ? t(ui.tools.cs.fix) : t(ui.tools.cs.var)}
                     </button>
                   ))}
                 </div>
@@ -470,7 +479,7 @@ function CostStructureTool() {
                   type="button"
                   onClick={() => remove(c.id)}
                   className="rounded-md p-1.5 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-500"
-                  aria-label={`Remove ${c.name || "cost line"}`}
+                  aria-label={`${t(ui.tools.cs.remove)} ${c.name || t(ui.tools.cs.namePh)}`}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -480,14 +489,14 @@ function CostStructureTool() {
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <MetricCard label="Fixed costs" value={money(totals.fixed)} sub={`${num(revenue > 0 ? (totals.fixed / revenue) * 100 : 0, 0)}% of revenue`} />
-          <MetricCard label="Variable costs" value={money(totals.variable)} sub={`${num(revenue > 0 ? (totals.variable / revenue) * 100 : 0, 0)}% of revenue`} />
-          <MetricCard label="Total costs" value={money(totals.total)} tone="amber" sub={`${num(revenue > 0 ? (totals.total / revenue) * 100 : 0, 0)}% of revenue`} />
+          <MetricCard label={t(ui.tools.cs.fixed)} value={money(totals.fixed)} sub={`${num(revenue > 0 ? (totals.fixed / revenue) * 100 : 0, 0)}% ${t(ui.tools.cs.ofRevenue)}`} />
+          <MetricCard label={t(ui.tools.cs.variable)} value={money(totals.variable)} sub={`${num(revenue > 0 ? (totals.variable / revenue) * 100 : 0, 0)}% ${t(ui.tools.cs.ofRevenue)}`} />
+          <MetricCard label={t(ui.tools.cs.total)} value={money(totals.total)} tone="amber" sub={`${num(revenue > 0 ? (totals.total / revenue) * 100 : 0, 0)}% ${t(ui.tools.cs.ofRevenue)}`} />
           <MetricCard
-            label="Monthly profit"
+            label={t(ui.tools.cs.profit)}
             value={money(totals.profit)}
             tone={totals.profit >= 0 ? "green" : "red"}
-            sub={`margin ${num(revenue > 0 ? (totals.profit / revenue) * 100 : 0, 1)}%`}
+            sub={`${t(ui.tools.cs.margin)} ${num(revenue > 0 ? (totals.profit / revenue) * 100 : 0, 1)}%`}
           />
         </div>
       </div>
@@ -510,7 +519,7 @@ function CostStructureTool() {
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value: number | string, name: string) => [money(Number(value)), name || "Unnamed"]}
+                formatter={(value: number | string, name: string) => [money(Number(value)), name || t(ui.tools.cs.unnamed)]}
                 contentStyle={{ borderRadius: 10, border: "1px solid #e2e8f0", fontSize: 12 }}
               />
             </PieChart>
@@ -518,13 +527,13 @@ function CostStructureTool() {
         </div>
 
         <Insight>
-          <span className="font-semibold text-navy-950">What to look for:</span> your largest line is{" "}
+          <span className="font-semibold text-navy-950">{t(ui.tools.cs.lookFor)}</span>{" "}
+          {t(ui.tools.cs.lookForA)}{" "}
           <span className="font-semibold text-navy-950">
             {sorted[0]?.name || "—"}
-            {topShare > 0 ? ` (${num(topShare * 100, 0)}% of total costs)` : ""}
+            {topShare > 0 ? ` (${num(topShare * 100, 0)}% ${t(ui.tools.cs.lookForB)})` : ""}
           </span>
-          . Fixed costs above ~70% of revenue make a business fragile — every slow month hurts directly. And if you
-          can&rsquo;t name which costs are variable, that&rsquo;s the first thing to fix.
+          . {t(ui.tools.cs.lookForBody)}
         </Insight>
       </div>
     </div>
@@ -534,14 +543,15 @@ function CostStructureTool() {
 /* ---------------- Section shell ---------------- */
 
 export function Tools() {
+  const { lang, t } = useLang();
   return (
     <section id="tools" className="relative border-t border-slate-200 bg-paper">
       <div className="bg-grid-faint pointer-events-none absolute inset-0" aria-hidden="true" />
       <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
         <SectionHeading
-          eyebrow="Business tools"
-          title="Do the math before you decide."
-          description="Three working analyzers built for small-business numbers — no sign-up, no spreadsheet gymnastics. Each one answers a question that changes what you should do next."
+          eyebrow={t(ui.tools.eyebrow)}
+          title={t(ui.tools.title)}
+          description={t(ui.tools.desc)}
         />
 
         <Tabs defaultValue="break-even" className="mt-12">
@@ -550,22 +560,22 @@ export function Tools() {
               value="break-even"
               className="data-[state=active]:bg-navy-950 data-[state=active]:text-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-600"
             >
-              <Scale className="mr-1.5 h-4 w-4" />
-              Break-Even
+              <Scale className="me-1.5 h-4 w-4" />
+              {t(ui.tools.tabBreakEven)}
             </TabsTrigger>
             <TabsTrigger
               value="pricing"
               className="data-[state=active]:bg-navy-950 data-[state=active]:text-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-600"
             >
-              <Percent className="mr-1.5 h-4 w-4" />
-              Pricing &amp; Margin
+              <Percent className="me-1.5 h-4 w-4" />
+              {t(ui.tools.tabPricing)}
             </TabsTrigger>
             <TabsTrigger
               value="costs"
               className="data-[state=active]:bg-navy-950 data-[state=active]:text-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-600"
             >
-              <Calculator className="mr-1.5 h-4 w-4" />
-              Cost Structure
+              <Calculator className="me-1.5 h-4 w-4" />
+              {t(ui.tools.tabCosts)}
             </TabsTrigger>
           </TabsList>
 
@@ -576,13 +586,13 @@ export function Tools() {
             <PricingTool />
           </TabsContent>
           <TabsContent value="costs" className="mt-6">
-            <CostStructureTool />
+            <CostStructureTool key={lang} />
           </TabsContent>
         </Tabs>
 
         <div className="mt-8 flex items-start gap-2.5 text-xs text-slate-500">
           <TrendingUp className="mt-0.5 h-4 w-4 shrink-0 text-signal-green-deep" />
-          All calculations run in your browser — nothing you type is stored or sent anywhere.
+          {t(ui.tools.privacy)}
         </div>
       </div>
     </section>

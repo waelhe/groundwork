@@ -1,24 +1,30 @@
+"use client";
+
 import { Activity } from "lucide-react";
-
-const platformLinks = [
-  { href: "#method", label: "The Method" },
-  { href: "#diagnosis", label: "Business Diagnosis" },
-  { href: "#problems", label: "Problem Library" },
-  { href: "#tools", label: "Business Tools" },
-  { href: "#action-plan", label: "Action Plans" },
-  { href: "#cases", label: "Case Studies" },
-];
-
-const areaLinks = [
-  "Pricing & margins",
-  "Cash flow",
-  "Sales systems",
-  "Customer retention",
-  "Operations & process",
-  "Automation & AI",
-];
+import { useLang } from "@/lib/i18n";
+import { ui } from "@/lib/ui-strings";
 
 export function Footer() {
+  const { t } = useLang();
+
+  const platformLinks = [
+    { href: "#method", label: t(ui.footer.theMethod) },
+    { href: "#diagnosis", label: t(ui.footer.diagnosis) },
+    { href: "#problems", label: t(ui.footer.library) },
+    { href: "#tools", label: t(ui.footer.tools) },
+    { href: "#action-plan", label: t(ui.footer.plans) },
+    { href: "#cases", label: t(ui.footer.cases) },
+  ];
+
+  const areaLinks = [
+    t(ui.footer.areaLinks.pricing),
+    t(ui.footer.areaLinks.cash),
+    t(ui.footer.areaLinks.sales),
+    t(ui.footer.areaLinks.retention),
+    t(ui.footer.areaLinks.ops),
+    t(ui.footer.areaLinks.ai),
+  ];
+
   return (
     <footer className="border-t border-white/[0.06] bg-[#03060c]">
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
@@ -31,19 +37,16 @@ export function Footer() {
               <span className="font-display text-lg font-bold text-white">Groundwork</span>
             </div>
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-slate-400">
-              Tell us what is happening in your business. We help you understand the problem, find
-              the cause, and build a practical solution — sized for small business money, people,
-              and time.
+              {t(ui.footer.desc)}
             </p>
             <p className="mt-5 rounded-lg border border-white/[0.08] bg-white/[0.03] p-3 text-xs leading-relaxed text-slate-500">
-              Groundwork provides business decision support, not financial, legal, or tax advice.
-              Verify material decisions with a qualified professional.
+              {t(ui.footer.disclaimer)}
             </p>
           </div>
 
-          <nav aria-label="Platform">
+          <nav aria-label={t(ui.footer.platform)}>
             <h3 className="font-display text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
-              Platform
+              {t(ui.footer.platform)}
             </h3>
             <ul className="mt-4 space-y-2.5">
               {platformLinks.map((l) => (
@@ -61,7 +64,7 @@ export function Footer() {
 
           <div>
             <h3 className="font-display text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
-              Common areas
+              {t(ui.footer.areas)}
             </h3>
             <ul className="mt-4 space-y-2.5">
               {areaLinks.map((a) => (
@@ -80,10 +83,10 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/[0.06] pt-7 sm:flex-row">
           <p className="text-xs text-slate-600">
-            © {new Date().getFullYear()} Groundwork — Business Diagnostics &amp; Practical Solutions
+            © {new Date().getFullYear()} {t(ui.footer.copyright)}
           </p>
           <p className="text-xs text-slate-600">
-            Systems, not symptoms.
+            {t(ui.footer.tagline)}
           </p>
         </div>
       </div>

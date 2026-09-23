@@ -1,4 +1,8 @@
+"use client";
+
+import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLang, phaseLabel } from "@/lib/i18n";
 
 interface SectionHeadingProps {
   eyebrow: string;
@@ -58,6 +62,16 @@ export function SectionHeading({
   );
 }
 
+/**
+ * Direction-aware arrow: points right in English (LTR), left in Arabic (RTL).
+ */
+export function ArrowDir({ className }: { className?: string }) {
+  const { isAr } = useLang();
+  return (
+    <ArrowRight className={cn(className, isAr && "-scale-x-100")} aria-hidden="true" />
+  );
+}
+
 type Priority = "NOW" | "NEXT" | "LATER";
 
 const priorityStyles: Record<Priority, string> = {
@@ -69,7 +83,7 @@ const priorityStyles: Record<Priority, string> = {
 const priorityStylesLight: Record<Priority, string> = {
   NOW: "bg-electric-500/10 text-electric-700 border-electric-600/30",
   NEXT: "bg-signal-green-deep/10 text-signal-green-deep border-signal-green-deep/30",
-  LATER: "bg-signal-amber-deep/10 text-signal-amber-deep border-signal-amber/50",
+  LATER: "bg-signal-amber-deep/10 text-signal-amber-deep border-signal-amber-deep/50",
 };
 
 export function PriorityBadge({
@@ -81,6 +95,7 @@ export function PriorityBadge({
   dark?: boolean;
   className?: string;
 }) {
+  const { lang } = useLang();
   const p = (["NOW", "NEXT", "LATER"].includes(priority) ? priority : "NOW") as Priority;
   return (
     <span
@@ -90,7 +105,7 @@ export function PriorityBadge({
         className
       )}
     >
-      {p}
+      {phaseLabel(p, lang)}
     </span>
   );
 }

@@ -1,11 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Clock3, Gauge, Package, Target, Users } from "lucide-react";
+import { Clock3, Gauge, Package, Target, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SectionHeading } from "@/components/shared";
-import { planLegend, samplePlan } from "@/lib/site-content";
+import { SectionHeading, ArrowDir } from "@/components/shared";
+import { siteContent } from "@/lib/content";
 import { cn } from "@/lib/utils";
+import { useLang } from "@/lib/i18n";
+import { ui } from "@/lib/ui-strings";
 
 const columnTone: Record<string, { border: string; header: string; chip: string }> = {
   NOW: {
@@ -26,6 +28,10 @@ const columnTone: Record<string, { border: string; header: string; chip: string 
 };
 
 export function ActionPlan() {
+  const { lang, t } = useLang();
+  const S = siteContent(lang);
+  const footerParts = lang === "ar" ? ui.plan.footer.ar : ui.plan.footer.en;
+
   return (
     <section id="action-plan" className="relative overflow-hidden border-t border-white/[0.06] bg-navy-950">
       <div className="bg-grid-dark pointer-events-none absolute inset-0" aria-hidden="true" />
@@ -37,9 +43,9 @@ export function ActionPlan() {
         <div className="flex flex-wrap items-end justify-between gap-6">
           <SectionHeading
             dark
-            eyebrow="Action plan"
-            title="Every diagnosis ends in a sequenced roadmap."
-            description="Not a to-do dump — an ordered sequence. NOW actions produce information or release cash immediately. NEXT moves need that data first. LATER builds compounding structures. This is what a real plan looks like for one common diagnosis:"
+            eyebrow={t(ui.plan.eyebrow)}
+            title={t(ui.plan.title)}
+            description={t(ui.plan.desc)}
           />
           <Button
             asChild
@@ -47,15 +53,15 @@ export function ActionPlan() {
             className="hidden border-white/20 bg-white/[0.04] font-semibold text-white hover:border-electric-500/60 hover:bg-electric-500/10 hover:text-white lg:inline-flex"
           >
             <a href="#diagnosis">
-              Build my plan
-              <ArrowRight className="ml-1.5 h-4 w-4" />
+              {t(ui.plan.buildMy)}
+              <ArrowDir className="ms-1.5 h-4 w-4" />
             </a>
           </Button>
         </div>
 
         <div className="mt-14 grid gap-5 lg:grid-cols-3">
           {(["NOW", "NEXT", "LATER"] as const).map((phase, pi) => {
-            const legend = planLegend[phase];
+            const legend = S.planLegend[phase];
             const tone = columnTone[phase];
             return (
               <motion.div
@@ -81,7 +87,7 @@ export function ActionPlan() {
                 <p className="mt-3 text-[13px] leading-relaxed text-slate-400">{legend.desc}</p>
 
                 <div className="mt-5 space-y-3.5">
-                  {samplePlan[phase].map((action, i) => (
+                  {S.samplePlan[phase].map((action, i) => (
                     <div
                       key={i}
                       className={cn(
@@ -96,19 +102,19 @@ export function ActionPlan() {
                       <div className="mt-3.5 space-y-1.5 border-t border-white/[0.06] pt-3 text-[12px]">
                         <div className="flex items-start gap-2 text-slate-300">
                           <Gauge className="mt-0.5 h-3.5 w-3.5 shrink-0 text-electric-400" />
-                          <span><span className="text-slate-500">Impact:</span> {action.impact}</span>
+                          <span><span className="text-slate-500">{t(ui.plan.impactL)}</span> {action.impact}</span>
                         </div>
                         <div className="flex items-start gap-2 text-slate-300">
                           <Users className="mt-0.5 h-3.5 w-3.5 shrink-0 text-signal-teal" />
-                          <span><span className="text-slate-500">Resources:</span> {action.resources}</span>
+                          <span><span className="text-slate-500">{t(ui.plan.resourcesL)}</span> {action.resources}</span>
                         </div>
                         <div className="flex items-start gap-2 text-slate-300">
                           <Clock3 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-signal-amber" />
-                          <span><span className="text-slate-500">Effort:</span> {action.effort}</span>
+                          <span><span className="text-slate-500">{t(ui.plan.effortL)}</span> {action.effort}</span>
                         </div>
                         <div className="flex items-start gap-2 text-slate-300">
                           <Target className="mt-0.5 h-3.5 w-3.5 shrink-0 text-signal-green" />
-                          <span><span className="text-slate-500">KPI:</span> {action.kpi}</span>
+                          <span><span className="text-slate-500">{t(ui.plan.kpiL)}</span> {action.kpi}</span>
                         </div>
                       </div>
                     </div>
@@ -123,14 +129,15 @@ export function ActionPlan() {
           <div className="flex items-start gap-3">
             <Package className="mt-0.5 h-5 w-5 shrink-0 text-electric-400" />
             <p className="max-w-2xl text-sm leading-relaxed text-slate-300">
-              Every action carries its <span className="font-semibold text-white">why, expected impact, resources,
-              effort and KPI</span> — because a plan you can&rsquo;t measure is just a wish with a deadline.
+              {footerParts[0]}
+              <span className="font-semibold text-white">{footerParts[1]}</span>
+              {footerParts[2]}
             </p>
           </div>
           <Button asChild className="shrink-0 bg-electric-500 font-semibold text-white hover:bg-electric-400">
             <a href="#diagnosis">
-              Run my diagnosis
-              <ArrowRight className="ml-1.5 h-4 w-4" />
+              {t(ui.plan.runMy)}
+              <ArrowDir className="ms-1.5 h-4 w-4" />
             </a>
           </Button>
         </div>

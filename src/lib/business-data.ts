@@ -44,7 +44,7 @@ export interface SolutionOption {
 export interface RootCause {
   cause: string;
   explanation: string;
-  frequency: "Most common" | "Frequent" | "Often hidden";
+  frequency: "Most common" | "Frequent" | "Often hidden" | "Possible";
 }
 
 export interface ImplementationStep {

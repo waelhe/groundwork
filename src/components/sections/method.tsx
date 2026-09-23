@@ -4,24 +4,32 @@ import { motion } from "framer-motion";
 import { Network, TrendingUp, Wrench } from "lucide-react";
 import { SectionHeading } from "@/components/shared";
 import { methodPhases, principles, businessAreas } from "@/lib/site-content";
+import { methodPhases as methodPhasesAr, principles as principlesAr, businessAreas as businessAreasAr } from "@/lib/site-content.ar";
+import { useLang } from "@/lib/i18n";
+import { ui } from "@/lib/ui-strings";
 
 const principleIcons = [Network, TrendingUp, Wrench];
 
 export function Method() {
+  const { lang, t } = useLang();
+  const phases = lang === "ar" ? methodPhasesAr : methodPhases;
+  const principleList = lang === "ar" ? principlesAr : principles;
+  const areas = lang === "ar" ? businessAreasAr : businessAreas;
+
   return (
     <section id="method" className="relative border-t border-white/[0.06] bg-navy-950">
       <div className="bg-dots-dark pointer-events-none absolute inset-0 opacity-40" aria-hidden="true" />
       <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
         <SectionHeading
           dark
-          eyebrow="The diagnostic method"
-          title="Every problem gets the same disciplined process."
-          description="No inspirational quotes, no one-size-fits-all playbooks. Just a structured method that separates what you see from what is actually broken — and compares real options before you spend anything."
+          eyebrow={t(ui.method.eyebrow)}
+          title={t(ui.method.title)}
+          description={t(ui.method.desc)}
         />
 
         {/* Phases */}
         <div className="mt-14 grid gap-5 lg:grid-cols-3">
-          {methodPhases.map((phase, pi) => (
+          {phases.map((phase, pi) => (
             <motion.div
               key={phase.phase}
               initial={{ opacity: 0, y: 24 }}
@@ -31,10 +39,10 @@ export function Method() {
               className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-navy-900/60 p-6 backdrop-blur"
             >
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-electric-500/50 to-transparent" />
-              <div className="flex items-baseline justify-between">
+              <div className="flex items-baseline justify-between gap-3">
                 <h3 className="font-display text-xl font-bold text-white">{phase.phase}</h3>
                 <span className="font-display text-xs font-bold uppercase tracking-[0.16em] text-electric-400">
-                  Phase {pi + 1} / 3
+                  {t(ui.method.phase)} {pi + 1} / 3
                 </span>
               </div>
               <p className="mt-1.5 text-sm text-slate-400">{phase.caption}</p>
@@ -59,10 +67,10 @@ export function Method() {
         {/* Principles */}
         <div className="mt-16">
           <h3 className="font-display text-sm font-bold uppercase tracking-[0.18em] text-slate-500">
-            What we refuse to do
+            {t(ui.method.refuse)}
           </h3>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
-            {principles.map((p, i) => {
+            {principleList.map((p, i) => {
               const Icon = principleIcons[i];
               return (
                 <motion.div
@@ -88,12 +96,13 @@ export function Method() {
         <div className="mt-16 rounded-2xl border border-white/[0.07] bg-navy-900/40 p-6 sm:p-8">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h3 className="font-display text-lg font-bold text-white">
-              One connected system, <span className="text-electric-400">{businessAreas.length} business areas</span>
+              {t(ui.method.areasTitle)}{" "}
+              <span className="text-electric-400">{areas.length} {t(ui.method.areasTitleAccent)}</span>
             </h3>
-            <span className="text-xs text-slate-500">Problems rarely live in the area where they appear</span>
+            <span className="text-xs text-slate-500">{t(ui.method.areasNote)}</span>
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
-            {businessAreas.map((area) => (
+            {areas.map((area) => (
               <span
                 key={area}
                 className="rounded-md border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[13px] font-medium text-slate-300 transition-colors hover:border-electric-500/40 hover:bg-electric-500/10 hover:text-electric-200"

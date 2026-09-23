@@ -2,7 +2,6 @@
 
 import {
   AlertTriangle,
-  ArrowRight,
   BadgeCheck,
   CircleHelp,
   ClipboardCheck,
@@ -16,9 +15,11 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PriorityBadge } from "@/components/shared";
+import { PriorityBadge, ArrowDir } from "@/components/shared";
 import type { DiagnosisReport } from "@/lib/diagnosis";
 import { cn } from "@/lib/utils";
+import { useLang, ratingLabel, confidenceLabel } from "@/lib/i18n";
+import { ui } from "@/lib/ui-strings";
 
 function confidenceChip(confidence: string) {
   const c = confidence.toLowerCase();
@@ -61,16 +62,21 @@ function BlockTitle({
 }
 
 export function ReportView({ report }: { report: DiagnosisReport }) {
+  const { lang, t } = useLang();
   const now = report.implementation.filter((i) => i.phase === "NOW");
   const next = report.implementation.filter((i) => i.phase === "NEXT");
   const later = report.implementation.filter((i) => i.phase === "LATER");
+  // Word-overlap matching only works for Latin scripts; disable it in Arabic.
   const recNames = new Set(
-    report.recommended.approach
-      .toLowerCase()
-      .split(/[^a-z]+/)
-      .filter((w) => w.length > 4)
+    lang === "en"
+      ? report.recommended.approach
+          .toLowerCase()
+          .split(/[^a-z]+/)
+          .filter((w) => w.length > 4)
+      : []
   );
   const isRecommended = (name: string) => {
+    if (lang !== "en") return false;
     const words = name.toLowerCase().split(/[^a-z]+/).filter((w) => w.length > 4);
     return words.some((w) => recNames.has(w));
   };
@@ -80,7 +86,7 @@ export function ReportView({ report }: { report: DiagnosisReport }) {
       {/* Problem statement */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card-lift">
         <BlockTitle icon={AlertTriangle} tone="amber">
-          Problem — what is happening
+          {t(ui.report.problem)}
         </BlockTitle>
         <p className="mt-3 text-[17px] font-medium leading-relaxed text-navy-950">{report.problemStatement}</p>
         {report.surfaceSymptoms.length > 0 && (
@@ -98,7 +104,7 @@ export function ReportView({ report }: { report: DiagnosisReport }) {
       {/* Root causes */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card-lift">
         <BlockTitle icon={Compass}>
-          Root causes — why it is happening
+          {t(ui.report.roots)}
         </BlockTitle>
         <div className="mt-4 space-y-3">
           {report.rootCauses.map((rc, i) => (
@@ -111,7 +117,7 @@ export function ReportView({ report }: { report: DiagnosisReport }) {
                   <span className="font-semibold text-navy-950">{rc.cause}</span>
                 </div>
                 <span className={cn("rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide", confidenceChip(rc.confidence))}>
-                  {rc.confidence}
+                  {confidenceLabel(rc.confidence, lang)}
                 </span>
               </div>
               <p className="mt-2.5 text-sm leading-relaxed text-slate-600">{rc.explanation}</p>
@@ -124,7 +130,7 @@ export function ReportView({ report }: { report: DiagnosisReport }) {
       {report.businessImpact.length > 0 && (
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card-lift">
           <BlockTitle icon={TrendingDown} tone="red">
-            Business impact
+            {t(ui.report.impact)}
           </BlockTitle>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {report.businessImpact.map((imp, i) => (
@@ -141,7 +147,7 @@ export function ReportView({ report }: { report: DiagnosisReport }) {
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="rounded-2xl border border-signal-green-deep/25 bg-signal-green-deep/[0.05] p-5">
           <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-signal-green-deep">
-            <BadgeCheck className="h-4 w-4" /> Known facts
+            <BadgeCheck className="h-4 w-4" /> {t(ui.report.facts)}
           </div>
           <ul className="mt-3 space-y-2">
             {(report.evidence.knownFacts ?? []).map((f, i) => (
@@ -151,7 +157,7 @@ export function ReportView({ report }: { report: DiagnosisReport }) {
         </div>
         <div className="rounded-2xl border border-signal-amber/50 bg-signal-amber/[0.06] p-5">
           <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-signal-amber-deep">
-            <CircleHelp className="h-4 w-4" /> Assumptions
+            <CircleHelp className="h-4 w-4" /> {t(ui.report.assumptions)}
           </div>
           <ul className="mt-3 space-y-2">
             {(report.evidence.assumptions ?? []).map((f, i) => (
@@ -161,7 +167,7 @@ export function ReportView({ report }: { report: DiagnosisReport }) {
         </div>
         <div className="rounded-2xl border border-electric-600/25 bg-electric-50 p-5">
           <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-electric-700">
-            <Database className="h-4 w-4" /> To verify
+            <Database className="h-4 w-4" /> {t(ui.report.toVerify)}
           </div>
           <ul className="mt-3 space-y-2.5">
             {(report.evidence.toVerify ?? []).map((f, i) => (
@@ -177,7 +183,7 @@ export function ReportView({ report }: { report: DiagnosisReport }) {
       {/* Solutions */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card-lift">
         <BlockTitle icon={Lightbulb} tone="teal">
-          Solution options — compared
+          {t(ui.report.solutions)}
         </BlockTitle>
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           {report.solutions.map((sol, i) => {
@@ -193,31 +199,31 @@ export function ReportView({ report }: { report: DiagnosisReport }) {
                 )}
               >
                 {rec && (
-                  <span className="absolute -top-2.5 left-4 rounded-full bg-signal-green-deep px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
-                    Recommended path
+                  <span className="absolute -top-2.5 start-4 rounded-full bg-signal-green-deep px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                    {t(ui.report.recBadge)}
                   </span>
                 )}
                 <div className="font-display text-base font-bold text-navy-950">{sol.name}</div>
                 <p className="mt-2 text-sm leading-relaxed text-slate-600">{sol.approach}</p>
                 <div className="mt-4 flex flex-wrap gap-1.5">
                   {[
-                    ["Impact", sol.impact],
-                    ["Cost", sol.cost],
-                    ["Complexity", sol.complexity],
-                    ["Risk", sol.risk],
+                    [t(ui.report.impactL), sol.impact],
+                    [t(ui.report.costL), sol.cost],
+                    [t(ui.report.complexityL), sol.complexity],
+                    [t(ui.report.riskL), sol.risk],
                   ].map(([label, value]) => (
                     <span
                       key={label}
                       className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-700"
                     >
                       <span className={cn("h-1.5 w-1.5 rounded-full", ratingDot(value))} />
-                      {label}: <span className="font-semibold">{value}</span>
+                      {label}: <span className="font-semibold">{ratingLabel(value, lang)}</span>
                     </span>
                   ))}
                 </div>
                 <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
-                  <span>Time: <span className="font-medium text-slate-600">{sol.time}</span></span>
-                  <span>Resources: <span className="font-medium text-slate-600">{sol.resources}</span></span>
+                  <span>{t(ui.report.timeL)}: <span className="font-medium text-slate-600">{sol.time}</span></span>
+                  <span>{t(ui.report.resourcesL)}: <span className="font-medium text-slate-600">{sol.resources}</span></span>
                 </div>
               </div>
             );
@@ -228,7 +234,7 @@ export function ReportView({ report }: { report: DiagnosisReport }) {
       {/* Recommended approach */}
       <div className="overflow-hidden rounded-2xl bg-navy-950 p-6 shadow-card-lift-lg sm:p-7">
         <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-electric-400">
-          <Target className="h-4 w-4" /> Recommended approach &amp; reasoning
+          <Target className="h-4 w-4" /> {t(ui.report.recommended)}
         </div>
         <p className="mt-3 font-display text-lg font-bold leading-snug text-white sm:text-xl">
           {report.recommended.approach}
@@ -239,7 +245,7 @@ export function ReportView({ report }: { report: DiagnosisReport }) {
             <Flag className="mt-0.5 h-5 w-5 shrink-0 text-electric-400" />
             <div>
               <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-electric-300">
-                First move — next 48 hours
+                {t(ui.report.firstMove)}
               </div>
               <p className="mt-1 text-sm leading-relaxed text-slate-200">{report.firstMove}</p>
             </div>
@@ -249,7 +255,7 @@ export function ReportView({ report }: { report: DiagnosisReport }) {
 
       {/* Implementation plan */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card-lift">
-        <BlockTitle icon={ClipboardCheck}>Implementation plan</BlockTitle>
+        <BlockTitle icon={ClipboardCheck}>{t(ui.report.implementation)}</BlockTitle>
         <div className="mt-4 grid gap-4 lg:grid-cols-3">
           {[
             { label: "NOW", items: now },
@@ -264,8 +270,8 @@ export function ReportView({ report }: { report: DiagnosisReport }) {
                     <div className="text-sm font-semibold leading-snug text-navy-950">{item.action}</div>
                     <p className="mt-1.5 text-[13px] leading-relaxed text-slate-600">{item.detail}</p>
                     <div className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-500">
-                      <span>Owner: <span className="font-semibold text-slate-600">{item.owner}</span></span>
-                      <span>Effort: <span className="font-semibold text-slate-600">{item.effort}</span></span>
+                      <span>{t(ui.report.ownerL)}: <span className="font-semibold text-slate-600">{item.owner}</span></span>
+                      <span>{t(ui.report.effortL)}: <span className="font-semibold text-slate-600">{item.effort}</span></span>
                     </div>
                   </div>
                 ))}
@@ -278,7 +284,7 @@ export function ReportView({ report }: { report: DiagnosisReport }) {
       {/* KPIs + Risks */}
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card-lift">
-          <BlockTitle icon={Target} tone="blue">KPIs — how you&rsquo;ll know it&rsquo;s working</BlockTitle>
+          <BlockTitle icon={Target} tone="blue">{t(ui.report.kpis)}</BlockTitle>
           <div className="mt-4 space-y-2.5">
             {report.kpis.map((k, i) => (
               <div key={i} className="rounded-xl border border-slate-200 bg-slate-50/60 p-3.5">
@@ -287,16 +293,16 @@ export function ReportView({ report }: { report: DiagnosisReport }) {
                   <span className="rounded bg-electric-50 px-2 py-0.5 text-[11px] font-bold text-electric-700">{k.cadence}</span>
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-600">
-                  <span>Baseline: <span className="font-semibold">{k.baseline}</span></span>
-                  <ArrowRight className="h-3 w-3 text-slate-400" />
-                  <span>Target: <span className="font-semibold text-signal-green-deep">{k.target}</span></span>
+                  <span>{t(ui.report.baselineL)}: <span className="font-semibold">{k.baseline}</span></span>
+                  <ArrowDir className="h-3 w-3 text-slate-400" />
+                  <span>{t(ui.report.targetL)}: <span className="font-semibold text-signal-green-deep">{k.target}</span></span>
                 </div>
               </div>
             ))}
           </div>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card-lift">
-          <BlockTitle icon={ShieldAlert} tone="red">Risks — and how to reduce them</BlockTitle>
+          <BlockTitle icon={ShieldAlert} tone="red">{t(ui.report.risks)}</BlockTitle>
           <div className="mt-4 space-y-2.5">
             {report.risks.map((r, i) => (
               <div key={i} className="rounded-xl border border-slate-200 p-3.5">
@@ -304,8 +310,8 @@ export function ReportView({ report }: { report: DiagnosisReport }) {
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-signal-amber" />
                   {r.risk}
                 </div>
-                <p className="mt-1.5 pl-6 text-[13px] leading-relaxed text-slate-600">
-                  <span className="font-semibold text-signal-green-deep">Mitigation:</span> {r.mitigation}
+                <p className="mt-1.5 ps-6 text-[13px] leading-relaxed text-slate-600">
+                  <span className="font-semibold text-signal-green-deep">{t(ui.report.mitigationL)}</span> {r.mitigation}
                 </p>
               </div>
             ))}
@@ -317,10 +323,11 @@ export function ReportView({ report }: { report: DiagnosisReport }) {
 }
 
 export function ReportActions({ onReset }: { onReset: () => void }) {
+  const { t } = useLang();
   return (
     <div className="flex flex-col items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-card-lift sm:flex-row">
       <p className="text-sm text-slate-600">
-        Re-run this diagnosis anytime — more context produces a sharper analysis.
+        {t(ui.report.rerun)}
       </p>
       <div className="flex gap-2.5">
         <Button
@@ -328,13 +335,13 @@ export function ReportActions({ onReset }: { onReset: () => void }) {
           onClick={onReset}
           className="border-slate-300 font-semibold text-navy-950 hover:bg-slate-50"
         >
-          <RotateCcw className="mr-1.5 h-4 w-4" />
-          Start Over
+          <RotateCcw className="me-1.5 h-4 w-4" />
+          {t(ui.report.startOver)}
         </Button>
         <Button asChild className="bg-electric-600 font-semibold text-white hover:bg-electric-500">
           <a href="#tools">
-            Open Business Tools
-            <ArrowRight className="ml-1.5 h-4 w-4" />
+            {t(ui.report.openTools)}
+            <ArrowDir className="ms-1.5 h-4 w-4" />
           </a>
         </Button>
       </div>

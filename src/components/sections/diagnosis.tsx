@@ -3,8 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  ArrowLeft,
-  ArrowRight,
   Brain,
   CheckCircle2,
   ChevronRight,
@@ -24,27 +22,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SectionHeading } from "@/components/shared";
+import { SectionHeading, ArrowDir } from "@/components/shared";
 import { ReportView, ReportActions } from "@/components/report-view";
-import { categories, diagnosisQuestions } from "@/lib/business-data";
+import { businessData } from "@/lib/content";
 import { asReport, type DiagnosisReport } from "@/lib/diagnosis";
 import { cn } from "@/lib/utils";
+import { useLang } from "@/lib/i18n";
+import { ui } from "@/lib/ui-strings";
 import { toast } from "@/hooks/use-toast";
 
 type Step = "describe" | "details" | "analyzing" | "report";
 
-const loadingStages = [
-  "Reading your description in full…",
-  "Separating symptoms from root causes…",
-  "Tracing processes and dependencies…",
-  "Comparing solution options on cost, impact and risk…",
-  "Sequencing the implementation plan…",
-  "Defining KPIs and verification points…",
-];
-
-const sizes = ["Just me", "2-5 people", "6-10 people", "11-25 people", "26-50 people"];
-
 export function Diagnosis() {
+  const { lang, isAr, t } = useLang();
+  const data = businessData(lang);
+
   const [step, setStep] = useState<Step>("describe");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<string>("profit");
@@ -57,9 +49,26 @@ export function Diagnosis() {
   const resultRef = useRef<HTMLDivElement>(null);
   const wizardTopRef = useRef<HTMLDivElement>(null);
 
+  const loadingStages = [
+    t(ui.wizard.stages.s1),
+    t(ui.wizard.stages.s2),
+    t(ui.wizard.stages.s3),
+    t(ui.wizard.stages.s4),
+    t(ui.wizard.stages.s5),
+    t(ui.wizard.stages.s6),
+  ];
+
+  const sizes = [
+    t(ui.wizard.sizes.s1),
+    t(ui.wizard.sizes.s2),
+    t(ui.wizard.sizes.s3),
+    t(ui.wizard.sizes.s4),
+    t(ui.wizard.sizes.s5),
+  ];
+
   const questions = useMemo(
-    () => diagnosisQuestions[(category as keyof typeof diagnosisQuestions) ?? "profit"] ?? [],
-    [category]
+    () => data.diagnosisQuestions[(category as keyof typeof data.diagnosisQuestions) ?? "profit"] ?? [],
+    [category, data]
   );
 
   useEffect(() => {
@@ -69,7 +78,7 @@ export function Diagnosis() {
       setStageIdx((i) => Math.min(i + 1, loadingStages.length - 1));
     }, 4200);
     return () => clearInterval(t);
-  }, [step]);
+  }, [step, lang]);
 
   const canContinue = description.trim().length >= 25;
 
@@ -82,9 +91,10 @@ export function Diagnosis() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           description,
-          category: categories.find((c) => c.id === category)?.label ?? category,
+          category: data.categories.find((c) => c.id === category)?.label ?? category,
           industry,
           size,
+          lang,
           answers: Object.fromEntries(
             questions
               .map((q) => [q.label, answers[q.id] ?? ""])
@@ -92,23 +102,23 @@ export function Diagnosis() {
           ),
         }),
       });
-      const data = await res.json();
+      const data2 = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Diagnosis failed");
+        throw new Error(data2.error || t(ui.wizard.errGeneric));
       }
-      const parsed = asReport(data.report);
-      if (!parsed) throw new Error("The analysis returned an unexpected format. Please try again.");
+      const parsed = asReport(data2.report);
+      if (!parsed) throw new Error(t(ui.wizard.errFormat));
       setReport(parsed);
       setStep("report");
       setTimeout(() => {
         resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 120);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Something went wrong. Please try again.";
+      const msg = e instanceof Error ? e.message : t(ui.wizard.errGeneric);
       setError(msg);
       setStep("details");
       toast({
-        title: "Diagnosis could not complete",
+        title: t(ui.wizard.errToastTitle),
         description: msg,
         variant: "destructive",
       });
@@ -134,9 +144,9 @@ export function Diagnosis() {
       <div className="relative mx-auto max-w-5xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
         <SectionHeading
           align="center"
-          eyebrow="Business diagnosis"
-          title="What is the biggest problem in your business right now?"
-          description="Describe it in your own words. The diagnostic engine separates symptoms from root causes, compares real solution options, and returns a prioritized plan with KPIs — distinguishing what is known, assumed, and still needs verification."
+          eyebrow={t(ui.wizard.eyebrow)}
+          title={t(ui.wizard.title)}
+          description={t(ui.wizard.desc)}
         />
 
         <div ref={wizardTopRef} className="mt-12">
@@ -154,16 +164,16 @@ export function Diagnosis() {
                 <div className="border-b border-slate-100 bg-gradient-to-r from-navy-950 to-navy-800 px-6 py-4">
                   <div className="flex items-center gap-2 text-white">
                     <MessageSquareText className="h-4 w-4 text-electric-400" />
-                    <span className="font-display text-sm font-bold">Step 1 of 2 — Describe the situation</span>
+                    <span className="font-display text-sm font-bold">{t(ui.wizard.step1)}</span>
                   </div>
                 </div>
 
                 <div className="p-6 sm:p-8">
                   <Label className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">
-                    Which area feels most broken?
+                    {t(ui.wizard.areaLabel)}
                   </Label>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {categories.map((c) => (
+                    {data.categories.map((c) => (
                       <button
                         key={c.id}
                         type="button"
@@ -180,24 +190,25 @@ export function Diagnosis() {
                     ))}
                   </div>
                   <p className="mt-2 text-xs text-slate-500">
-                    Not sure? Pick your gut feeling — the diagnosis will test whether the problem actually lives there.
+                    {t(ui.wizard.areaNote)}
                   </p>
 
                   <div className="mt-7">
                     <Label htmlFor="description" className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">
-                      What is happening in your business?
+                      {t(ui.wizard.descLabel)}
                     </Label>
                     <Textarea
                       id="description"
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder="e.g. We're busier than ever — more customers, more orders — but at the end of the month there's nothing left. I work 60+ hours and my own pay keeps shrinking. I don't know if my prices are wrong or my costs are too high…"
+                      placeholder={t(ui.wizard.descPlaceholder)}
+                      dir={isAr ? "rtl" : "ltr"}
                       className="mt-3 min-h-[140px] border-slate-300 text-[15px] leading-relaxed focus-visible:ring-electric-500"
                     />
-                    <div className="mt-1.5 flex justify-between text-xs text-slate-400">
-                      <span>Facts, numbers and feelings all help. Write like you&rsquo;d talk.</span>
-                      <span className={cn(canContinue ? "text-signal-green-deep font-medium" : "")}>
-                        {description.trim().length} / 25 min
+                    <div className="mt-1.5 flex justify-between gap-3 text-xs text-slate-400">
+                      <span>{t(ui.wizard.descHint)}</span>
+                      <span className={cn("shrink-0", canContinue ? "text-signal-green-deep font-medium" : "")}>
+                        {description.trim().length} / 25 {t(ui.wizard.minChars)}
                       </span>
                     </div>
                   </div>
@@ -210,15 +221,15 @@ export function Diagnosis() {
 
                   <div className="mt-7 flex items-center justify-between gap-3">
                     <p className="hidden text-xs text-slate-500 sm:block">
-                      Next: 3 targeted questions — only the ones that can change the diagnosis.
+                      {t(ui.wizard.nextHint)}
                     </p>
                     <Button
                       onClick={() => setStep("details")}
                       disabled={!canContinue}
                       className="bg-electric-600 px-6 font-semibold text-white hover:bg-electric-500 disabled:opacity-40"
                     >
-                      Continue
-                      <ArrowRight className="ml-1.5 h-4 w-4" />
+                      {t(ui.wizard.continue)}
+                      <ArrowDir className="ms-1.5 h-4 w-4" />
                     </Button>
                   </div>
                 </div>
@@ -238,7 +249,7 @@ export function Diagnosis() {
                 <div className="border-b border-slate-100 bg-gradient-to-r from-navy-950 to-navy-800 px-6 py-4">
                   <div className="flex items-center gap-2 text-white">
                     <Search className="h-4 w-4 text-electric-400" />
-                    <span className="font-display text-sm font-bold">Step 2 of 2 — Three targeted questions</span>
+                    <span className="font-display text-sm font-bold">{t(ui.wizard.step2)}</span>
                   </div>
                 </div>
 
@@ -246,23 +257,23 @@ export function Diagnosis() {
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
                       <Label htmlFor="industry" className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">
-                        Business type (optional)
+                        {t(ui.wizard.industryLabel)}
                       </Label>
                       <Input
                         id="industry"
                         value={industry}
                         onChange={(e) => setIndustry(e.target.value)}
-                        placeholder="e.g. Bakery, plumbing, salon, consulting…"
+                        placeholder={t(ui.wizard.industryPh)}
                         className="mt-2 border-slate-300 focus-visible:ring-electric-500"
                       />
                     </div>
                     <div>
                       <Label className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">
-                        Team size (optional)
+                        {t(ui.wizard.sizeLabel)}
                       </Label>
                       <Select value={size} onValueChange={setSize}>
                         <SelectTrigger className="mt-2 border-slate-300 focus:ring-electric-500">
-                          <SelectValue placeholder="Select size" />
+                          <SelectValue placeholder={t(ui.wizard.sizePh)} />
                         </SelectTrigger>
                         <SelectContent>
                           {sizes.map((s) => (
@@ -281,7 +292,7 @@ export function Diagnosis() {
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <Label className="text-[15px] font-semibold text-navy-950">
-                              <span className="mr-2 font-display text-electric-600">Q{i + 1}.</span>
+                              <span className="me-2 font-display text-electric-600">{t(ui.wizard.qPrefix)}{i + 1}.</span>
                               {q.label}
                             </Label>
                             <p className="mt-1 text-xs leading-snug text-slate-500">{q.hint}</p>
@@ -291,6 +302,7 @@ export function Diagnosis() {
                           value={answers[q.id] ?? ""}
                           onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
                           placeholder={q.placeholder}
+                          dir={isAr ? "rtl" : "ltr"}
                           className="mt-3 min-h-[72px] border-slate-300 bg-white text-sm leading-relaxed focus-visible:ring-electric-500"
                         />
                       </div>
@@ -298,8 +310,7 @@ export function Diagnosis() {
                   </div>
 
                   <p className="mt-5 text-xs text-slate-500">
-                    Answer what you know, skip what you don&rsquo;t — the engine works with incomplete information and
-                    flags what still needs verification.
+                    {t(ui.wizard.answerNote)}
                   </p>
 
                   {error && (
@@ -314,15 +325,15 @@ export function Diagnosis() {
                       onClick={() => setStep("describe")}
                       className="border-slate-300 font-medium text-slate-700 hover:bg-slate-50"
                     >
-                      <ArrowLeft className="mr-1.5 h-4 w-4" />
-                      Back
+                      <ArrowDir className="me-1.5 h-4 w-4 rotate-180" />
+                      {t(ui.wizard.back)}
                     </Button>
                     <Button
                       onClick={runDiagnosis}
                       className="bg-electric-600 px-6 font-semibold text-white hover:bg-electric-500"
                     >
-                      <Brain className="mr-1.5 h-4 w-4" />
-                      Run Diagnosis
+                      <Brain className="me-1.5 h-4 w-4" />
+                      {t(ui.wizard.run)}
                     </Button>
                   </div>
                 </div>
@@ -346,17 +357,17 @@ export function Diagnosis() {
                       <Sparkles className="h-8 w-8 text-white" />
                     </div>
                     <h3 className="mt-6 font-display text-xl font-bold text-white">
-                      Running your business diagnosis
+                      {t(ui.wizard.analyzingTitle)}
                     </h3>
                     <p className="mt-2 text-sm text-slate-400">
-                      Applying the 10-step method to your situation. This usually takes under a minute.
+                      {t(ui.wizard.analyzingSub)}
                     </p>
                     <div className="mt-8 w-full space-y-2.5">
                       {loadingStages.map((s, i) => (
                         <div
                           key={s}
                           className={cn(
-                            "flex items-center gap-2.5 rounded-lg border px-3.5 py-2.5 text-left text-[13px] transition-all duration-500",
+                            "flex items-center gap-2.5 rounded-lg border px-3.5 py-2.5 text-start text-[13px] transition-all duration-500",
                             i < stageIdx
                               ? "border-signal-teal/25 bg-signal-teal/10 text-teal-100"
                               : i === stageIdx
@@ -369,7 +380,7 @@ export function Diagnosis() {
                           ) : i === stageIdx ? (
                             <Loader2 className="h-4 w-4 shrink-0 animate-spin text-electric-400" />
                           ) : (
-                            <ChevronRight className="h-4 w-4 shrink-0 text-slate-600" />
+                            <ChevronRight className={cn("h-4 w-4 shrink-0 text-slate-600", isAr && "-scale-x-100")} />
                           )}
                           {s}
                         </div>
@@ -396,14 +407,14 @@ export function Diagnosis() {
                       <CheckCircle2 className="h-5 w-5 text-signal-green-deep" />
                     </span>
                     <div>
-                      <div className="font-display text-base font-bold text-navy-950">Your diagnosis is ready</div>
+                      <div className="font-display text-base font-bold text-navy-950">{t(ui.wizard.readyTitle)}</div>
                       <div className="text-xs text-slate-500">
-                        Structured by the 10-step method · facts, assumptions and to-verify kept separate
+                        {t(ui.wizard.readySub)}
                       </div>
                     </div>
                   </div>
                   <span className="rounded-full bg-electric-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-electric-700">
-                    {categories.find((c) => c.id === category)?.label ?? category} · {industry || "General business"}
+                    {data.categories.find((c) => c.id === category)?.label ?? category} · {industry || t(ui.wizard.generalBiz)}
                   </span>
                 </div>
 
